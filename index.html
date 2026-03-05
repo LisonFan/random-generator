@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>随机生成器</title>
+  <meta name="theme-color" content="#667eea">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fff;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      width: 360px;
+      max-width: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: #f5f5f5;
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: #666;
+      transition: all 0.2s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tab.active {
+      background: white;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .password-display {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .password-text {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      word-break: break-all;
+      color: #333;
+      min-height: 24px;
+    }
+
+    .copy-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 0.85rem;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .copy-btn:hover {
+      background: #5a6fd6;
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .strength-bar {
+      height: 5px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    .strength-text {
+      text-align: center;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+    }
+
+    .option-group {
+      margin-bottom: 16px;
+    }
+
+    .option-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    .length-slider {
+      width: 100%;
+      height: 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: #e0e0e0;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .length-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #667eea;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .checkbox-item input {
+      width: 16px;
+      height: 16px;
+      accent-color: #667eea;
+    }
+
+    .generate-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .generate-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .pin-display {
+      font-size: 2rem;
+      letter-spacing: 8px;
+      text-align: center;
+    }
+
+    .info-text {
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+    }
+
+    .select-input {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: white;
+      color: #333;
+    }
+
+    .toast {
+      position: fixed;
+      inset: 0;
+      width: fit-content;
+      height: fit-content;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+      }
+
+      .card {
+        background: #2d2d2d;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .tabs {
+        background: #3a3a3a;
+      }
+
+      .tab {
+        color: #aaa;
+      }
+
+      .tab.active {
+        background: #4a4a4a;
+        color: #fff;
+      }
+
+      .password-display {
+        background: #3a3a3a;
+      }
+
+      .password-text {
+        color: #eee;
+      }
+
+      .option-label {
+        color: #bbb;
+      }
+
+      .checkbox-item {
+        color: #ccc;
+      }
+
+      .length-slider {
+        background: #4a4a4a;
+      }
+
+      .strength-bar {
+        background: #4a4a4a;
+      }
+
+      .info-text {
+        color: #888;
+      }
+
+      .select-input {
+        background: #3a3a3a;
+        border-color: #4a4a4a;
+        color: #eee;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab" :class="{ active: tab === 'password' }" @click="tab = 'password'">🔐</button>
+        <button class="tab" :class="{ active: tab === 'username' }" @click="tab = 'username'">👤</button>
+        <button class="tab" :class="{ active: tab === 'englishName' }" @click="tab = 'englishName'">🇬🇧</button>
+        <button class="tab" :class="{ active: tab === 'pin' }" @click="tab = 'pin'">🔢</button>
+        <button class="tab" :class="{ active: tab === 'port' }" @click="tab = 'port'">🌐</button>
+        <button class="tab" :class="{ active: tab === 'mac' }" @click="tab = 'mac'">📡</button>
+      </div>
+
+      <!-- 自定义密码 -->
+      <template v-if="tab === 'password'">
+        <div class="password-display">
+          <span class="password-text">{{ customPassword || '点击生成' }}</span>
+          <button class="copy-btn" @click="copy(customPassword)" :disabled="!customPassword">复制</button>
+        </div>
+
+        <div class="strength-bar">
+          <div class="strength-fill" :style="customStrengthStyle"></div>
+        </div>
+        <p class="strength-text" :style="{ color: customStrengthColor }">{{ customStrengthText }}</p>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>密码长度</span>
+            <span>{{ length }}</span>
+          </div>
+          <input type="range" class="length-slider" v-model="length" min="6" max="32">
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="options.uppercase">
+            <span>大写字母 (A-Z)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="options.lowercase">
+            <span>小写字母 (a-z)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="options.numbers">
+            <span>数字 (0-9)</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" v-model="options.symbols">
+            <span>特殊符号 (!@#$)</span>
+          </label>
+        </div>
+
+        <button class="generate-btn" @click="generateCustom">生成密码</button>
+      </template>
+
+      <!-- 6位数字密码 -->
+      <template v-if="tab === 'pin'">
+        <div class="password-display">
+          <span class="password-text pin-display">{{ pinPassword || '------' }}</span>
+          <button class="copy-btn" @click="copy(pinPassword)" :disabled="!pinPassword">复制</button>
+        </div>
+
+        <p class="info-text">适用于手机解锁、银行卡密码、验证码等</p>
+
+        <button class="generate-btn" @click="generatePin">生成密码</button>
+      </template>
+
+      <!-- 随机端口 -->
+      <template v-if="tab === 'port'">
+        <div class="password-display">
+          <span class="password-text pin-display">{{ randomPort || '-----' }}</span>
+          <button class="copy-btn" @click="copy(randomPort)" :disabled="!randomPort">复制</button>
+        </div>
+
+        <p class="info-text">范围 1024-65534，避开系统保留端口</p>
+
+        <button class="generate-btn" @click="generatePort">生成端口</button>
+      </template>
+
+      <!-- 随机用户名 -->
+      <template v-if="tab === 'username'">
+        <div class="password-display">
+          <span class="password-text">{{ username || '点击生成' }}</span>
+          <button class="copy-btn" @click="copy(username)" :disabled="!username">复制</button>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>用户名长度</span>
+            <span>{{ usernameLength }}</span>
+          </div>
+          <input type="range" class="length-slider" v-model="usernameLength" min="4" max="16">
+        </div>
+
+        <button class="generate-btn" @click="generateUsername">生成用户名</button>
+      </template>
+
+      <!-- 英文名 -->
+      <template v-if="tab === 'englishName'">
+        <div class="password-display">
+          <span class="password-text">{{ englishNameDisplay }}</span>
+          <button class="copy-btn" @click="copy(englishName)" :disabled="!englishName || englishNameLoading">复制</button>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>性别</span>
+            <select v-model="englishGender" class="select-input">
+              <option value="male">男</option>
+              <option value="female">女</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>来源</span>
+            <select v-model="englishSource" class="select-input">
+              <option value="auto">自动</option>
+              <option value="randomuser">RandomUser</option>
+              <option value="namefake">NameFake</option>
+              <option value="fakerapi">FakerAPI</option>
+              <option value="local">本地</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="info-text">当前来源：{{ englishNameProviderText }}</p>
+
+        <button class="generate-btn" @click="generateEnglishName" :disabled="englishNameLoading">
+          {{ englishNameLoading ? '生成中…' : '生成英文名' }}
+        </button>
+      </template>
+
+      <!-- MAC 地址 -->
+      <template v-if="tab === 'mac'">
+        <div class="password-display">
+          <span class="password-text">{{ formattedMac || '点击生成' }}</span>
+          <button class="copy-btn" @click="copy(formattedMac)" :disabled="!macAddress">复制</button>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>格式</span>
+            <select v-model="macFormat" class="select-input">
+              <option value=":">00:10:FA:6E:38:4A</option>
+              <option value="-">00-10-FA-6E-38-4A</option>
+              <option value=".">0010.FA6E.384A</option>
+              <option value="">0010FA6E384A</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <div class="option-label">
+            <span>大小写</span>
+            <select v-model="macCase" class="select-input">
+              <option value="upper">大写</option>
+              <option value="lower">小写</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="generate-btn" @click="generateMac">生成 MAC 地址</button>
+      </template>
+    </div>
+
+    <div class="toast" :class="{ show: showToast }">{{ toastMessage }}</div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, reactive, watch } = Vue
+
+    const ENGLISH_NAME_DATA = {
+      first: {
+        male: [
+          'Adam', 'Adrian', 'Albert', 'Alex', 'Andrew', 'Anthony', 'Arthur', 'Benjamin', 'Brian', 'Caleb',
+          'Charles', 'Christopher', 'Daniel', 'David', 'Dominic', 'Edward', 'Ethan', 'Felix', 'Frank', 'George',
+          'Harry', 'Henry', 'Hugo', 'Ian', 'Jack', 'James', 'Jason', 'John', 'Joseph', 'Julian',
+          'Kevin', 'Leo', 'Liam', 'Logan', 'Lucas', 'Marcus', 'Martin', 'Matthew', 'Michael', 'Nathan',
+          'Nicholas', 'Oliver', 'Oscar', 'Patrick', 'Peter', 'Ryan', 'Samuel', 'Sebastian', 'Thomas', 'William'
+        ],
+        female: [
+          'Abigail', 'Alice', 'Amelia', 'Anna', 'Ariana', 'Audrey', 'Bella', 'Camila', 'Charlotte', 'Chloe',
+          'Claire', 'Daisy', 'Eleanor', 'Elena', 'Elizabeth', 'Ella', 'Emily', 'Emma', 'Eva', 'Fiona',
+          'Grace', 'Hannah', 'Harper', 'Isabella', 'Ivy', 'Jasmine', 'Jessica', 'Julia', 'Katherine', 'Layla',
+          'Lily', 'Lucy', 'Madison', 'Mia', 'Natalie', 'Nora', 'Olivia', 'Penelope', 'Ruby', 'Samantha',
+          'Sophia', 'Sophie', 'Stella', 'Taylor', 'Victoria', 'Violet', 'Wendy', 'Zoe', 'Zoey', 'Megan'
+        ]
+      },
+      last: [
+        'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
+        'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
+        'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson',
+        'Walker', 'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
+        'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts',
+        'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker', 'Cruz', 'Edwards', 'Collins', 'Reyes'
+      ]
+    }
+
+    const pickOne = (list) => list[Math.floor(Math.random() * list.length)]
+
+    const fetchJson = async (url, { timeoutMs = 2000 } = {}) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        const res = await fetch(url, { signal: controller.signal, cache: 'no-store' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return await res.json()
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+
+    createApp({
+      setup() {
+        const tab = ref('password')
+        const customPassword = ref('')
+        const pinPassword = ref('')
+        const randomPort = ref('')
+        const username = ref('')
+        const englishName = ref('')
+        const englishGender = ref('male')
+        const englishSource = ref('auto')
+        const englishNameLoading = ref(false)
+        const englishNameProvider = ref('local')
+        const macAddress = ref('')
+        const macFormat = ref(':')
+        const macCase = ref('upper')
+        const length = ref(16)
+        const usernameLength = ref(8)
+        const showToast = ref(false)
+        const toastMessage = ref('')
+
+        const options = reactive({
+          uppercase: true,
+          lowercase: true,
+          numbers: true,
+          symbols: true
+        })
+
+        const charSets = {
+          uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+          lowercase: 'abcdefghijklmnopqrstuvwxyz',
+          numbers: '0123456789',
+          symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+        }
+
+        const generateCustom = () => {
+          let chars = ''
+          let charsNoSymbols = ''
+          for (const [key, enabled] of Object.entries(options)) {
+            if (enabled) {
+              chars += charSets[key]
+              if (key !== 'symbols') charsNoSymbols += charSets[key]
+            }
+          }
+
+          if (!chars) {
+            toast('请至少选择一种字符类型')
+            return
+          }
+
+          let result = ''
+          // 第一位不能是符号
+          const firstCharSet = charsNoSymbols || chars
+          result += firstCharSet.charAt(Math.floor(Math.random() * firstCharSet.length))
+          
+          for (let i = 1; i < length.value; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length))
+          }
+          customPassword.value = result
+        }
+
+        const generatePin = () => {
+          let result = ''
+          for (let i = 0; i < 6; i++) {
+            result += Math.floor(Math.random() * 10)
+          }
+          pinPassword.value = result
+        }
+
+        const generatePort = () => {
+          randomPort.value = String(Math.floor(Math.random() * (65534 - 1024 + 1)) + 1024)
+        }
+
+        const generateUsername = () => {
+          const chars = 'abcdefghijklmnopqrstuvwxyz'
+          let result = ''
+          for (let i = 0; i < usernameLength.value; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length))
+          }
+          username.value = result
+        }
+
+        const englishNameDisplay = computed(() => {
+          if (englishNameLoading.value) return '生成中…'
+          return englishName.value || '点击生成'
+        })
+
+        const englishNameProviderText = computed(() => {
+          const map = {
+            randomuser: 'RandomUser',
+            namefake: 'NameFake',
+            fakerapi: 'FakerAPI',
+            local: '本地'
+          }
+          return map[englishNameProvider.value] || '未知'
+        })
+
+        const getEnglishNameFromLocal = (gender) => {
+          const first = pickOne(ENGLISH_NAME_DATA.first[gender])
+          const last = pickOne(ENGLISH_NAME_DATA.last)
+          return { first, last, provider: 'local' }
+        }
+
+        const getEnglishNameFromRandomUser = async (gender) => {
+          const url = `https://randomuser.me/api/?inc=name&noinfo&nat=us&gender=${encodeURIComponent(gender)}`
+          const json = await fetchJson(url)
+          const name = json?.results?.[0]?.name
+          const first = name?.first
+          const last = name?.last
+          if (!first || !last) throw new Error('Invalid response')
+          return { first, last, provider: 'randomuser' }
+        }
+
+        const getEnglishNameFromNameFake = async (gender) => {
+          const url = `/api/namefake?gender=${encodeURIComponent(gender)}`
+          const json = await fetchJson(url)
+          const first = json?.first
+          const last = json?.last
+          if (!first || !last) throw new Error('Invalid response')
+          return { first, last, provider: 'namefake' }
+        }
+
+        const getEnglishNameFromFakerApi = async () => {
+          const url = 'https://fakerapi.it/api/v2/persons?_quantity=1&_locale=en_US'
+          const json = await fetchJson(url)
+          const record = (Array.isArray(json?.data) ? json.data[0] : null) || json?.data || json?.results?.[0] || json?.result
+          const first =
+            record?.firstname ||
+            record?.first_name ||
+            record?.first ||
+            record?.name?.first ||
+            record?.name?.firstname
+          const last =
+            record?.lastname ||
+            record?.last_name ||
+            record?.last ||
+            record?.name?.last ||
+            record?.name?.lastname
+          if (!first || !last) throw new Error('Invalid response')
+          return { first, last, provider: 'fakerapi' }
+        }
+
+        let englishNameReq = 0
+        const generateEnglishName = async () => {
+          const reqId = ++englishNameReq
+          const gender = englishGender.value === 'female' ? 'female' : 'male'
+          const source = englishSource.value
+
+          englishNameLoading.value = true
+          try {
+            const order =
+              source === 'auto'
+                ? ['randomuser', 'namefake', 'fakerapi', 'local']
+                : source === 'local'
+                  ? ['local']
+                  : [source, 'local']
+
+            for (const provider of order) {
+              try {
+                const data =
+                  provider === 'randomuser'
+                    ? await getEnglishNameFromRandomUser(gender)
+                    : provider === 'namefake'
+                      ? await getEnglishNameFromNameFake(gender)
+                      : provider === 'fakerapi'
+                        ? await getEnglishNameFromFakerApi()
+                        : getEnglishNameFromLocal(gender)
+
+                if (reqId !== englishNameReq) return
+                englishName.value = `${data.first} ${data.last}`
+                englishNameProvider.value = data.provider
+                if (source === 'namefake' && data.provider !== 'namefake') {
+                  toast('NameFake 获取失败，已回退本地')
+                }
+                return
+              } catch {
+                // try next provider
+              }
+            }
+
+            toast('获取英文名失败，请稍后重试')
+          } finally {
+            if (reqId === englishNameReq) englishNameLoading.value = false
+          }
+        }
+
+        watch([englishGender, englishSource], () => generateEnglishName())
+
+        const generateMac = () => {
+          const hex = '0123456789ABCDEF'
+          let bytes = []
+          for (let i = 0; i < 6; i++) {
+            let byte = hex.charAt(Math.floor(Math.random() * 16)) + hex.charAt(Math.floor(Math.random() * 16))
+            if (i === 0) {
+              byte = hex.charAt(Math.floor(Math.random() * 16)) + hex.charAt(Math.floor(Math.random() * 8) * 2)
+            }
+            bytes.push(byte)
+          }
+          macAddress.value = bytes.join('')
+        }
+
+        const formattedMac = computed(() => {
+          if (!macAddress.value) return ''
+          let result = macAddress.value
+          if (macFormat.value === ':') {
+            result = result.match(/.{2}/g).join(':')
+          } else if (macFormat.value === '-') {
+            result = result.match(/.{2}/g).join('-')
+          } else if (macFormat.value === '.') {
+            result = result.match(/.{4}/g).join('.')
+          }
+          return macCase.value === 'lower' ? result.toLowerCase() : result
+        })
+
+        const customStrength = computed(() => {
+          if (!customPassword.value) return 0
+          let score = 0
+          if (customPassword.value.length >= 12) score += 25
+          if (/[A-Z]/.test(customPassword.value)) score += 25
+          if (/[a-z]/.test(customPassword.value)) score += 25
+          if (/[0-9]/.test(customPassword.value)) score += 15
+          if (/[^A-Za-z0-9]/.test(customPassword.value)) score += 10
+          return Math.min(score, 100)
+        })
+
+        const customStrengthColor = computed(() => {
+          if (customStrength.value < 40) return '#e74c3c'
+          if (customStrength.value < 70) return '#f39c12'
+          return '#27ae60'
+        })
+
+        const customStrengthText = computed(() => {
+          if (!customPassword.value) return '等待生成'
+          if (customStrength.value < 40) return '弱'
+          if (customStrength.value < 70) return '中等'
+          return '强'
+        })
+
+        const customStrengthStyle = computed(() => ({
+          width: `${customStrength.value}%`,
+          background: customStrengthColor.value
+        }))
+
+        const toast = (msg) => {
+          toastMessage.value = msg
+          showToast.value = true
+          setTimeout(() => showToast.value = false, 2000)
+        }
+
+        const copy = async (text) => {
+          if (!text) return
+          try {
+            await navigator.clipboard.writeText(text)
+            toast('已复制到剪贴板')
+          } catch {
+            toast('复制失败')
+          }
+        }
+
+        generateCustom()
+        generatePin()
+        generatePort()
+        generateUsername()
+        generateEnglishName()
+        generateMac()
+
+        return {
+          tab, customPassword, pinPassword, randomPort, username,
+          englishName, englishGender, englishSource, englishNameLoading, englishNameDisplay, englishNameProviderText,
+          macAddress, macFormat, macCase, formattedMac, length, usernameLength, options, showToast, toastMessage,
+          customStrength, customStrengthColor, customStrengthText, customStrengthStyle,
+          generateCustom, generatePin, generatePort, generateUsername, generateEnglishName, generateMac, copy
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>
