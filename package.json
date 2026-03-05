@@ -1,5 +1,5 @@
 {
-  "name": "random-generator-test",
+  "name": "random-generator",
   "private": true,
   "type": "module",
   "dependencies": {
