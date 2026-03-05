@@ -624,11 +624,10 @@
         }
 
         const getEnglishNameFromRandomUser = async (gender) => {
-          const url = `https://randomuser.me/api/?inc=name&noinfo&nat=us&gender=${encodeURIComponent(gender)}`
+          const url = `/api/randomuser?gender=${encodeURIComponent(gender)}`
           const json = await fetchJson(url)
-          const name = json?.results?.[0]?.name
-          const first = name?.first
-          const last = name?.last
+          const first = json?.first
+          const last = json?.last
           if (!first || !last) throw new Error('Invalid response')
           return { first, last, provider: 'randomuser' }
         }
@@ -642,22 +641,11 @@
           return { first, last, provider: 'namefake' }
         }
 
-        const getEnglishNameFromFakerApi = async () => {
-          const url = 'https://fakerapi.it/api/v2/persons?_quantity=1&_locale=en_US'
+        const getEnglishNameFromFakerApi = async (gender) => {
+          const url = `/api/fakerapi?gender=${encodeURIComponent(gender)}`
           const json = await fetchJson(url)
-          const record = (Array.isArray(json?.data) ? json.data[0] : null) || json?.data || json?.results?.[0] || json?.result
-          const first =
-            record?.firstname ||
-            record?.first_name ||
-            record?.first ||
-            record?.name?.first ||
-            record?.name?.firstname
-          const last =
-            record?.lastname ||
-            record?.last_name ||
-            record?.last ||
-            record?.name?.last ||
-            record?.name?.lastname
+          const first = json?.first
+          const last = json?.last
           if (!first || !last) throw new Error('Invalid response')
           return { first, last, provider: 'fakerapi' }
         }
@@ -685,7 +673,7 @@
                     : provider === 'namefake'
                       ? await getEnglishNameFromNameFake(gender)
                       : provider === 'fakerapi'
-                        ? await getEnglishNameFromFakerApi()
+                        ? await getEnglishNameFromFakerApi(gender)
                         : getEnglishNameFromLocal(gender)
 
                 if (reqId !== englishNameReq) return
