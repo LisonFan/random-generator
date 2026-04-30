@@ -407,8 +407,13 @@
       <!-- 英文名 -->
       <template v-if="tab === 'englishName'">
         <div class="password-display">
-          <span class="password-text">{{ englishNameDisplay }}</span>
-          <button class="copy-btn" @click="copy(englishName)" :disabled="!englishName || englishNameLoading">复制</button>
+          <span class="password-text">{{ englishFullNameDisplay }}</span>
+          <button class="copy-btn" @click="copy(englishFullName)" :disabled="!englishFullName || englishNameLoading">复制</button>
+        </div>
+
+        <div class="password-display">
+          <span class="password-text">{{ englishDotNameDisplay }}</span>
+          <button class="copy-btn" @click="copy(englishDotName)" :disabled="!englishDotName || englishNameLoading">复制</button>
         </div>
 
         <div class="option-group">
@@ -528,7 +533,7 @@
         const pinPassword = ref('')
         const randomPort = ref('')
         const username = ref('')
-        const englishName = ref('')
+        const englishNameParts = ref(null)
         const englishGender = ref('male')
         const englishSource = ref('auto')
         const englishNameLoading = ref(false)
@@ -554,6 +559,36 @@
           numbers: '0123456789',
           symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
         }
+
+        const normalizeNameSegment = (value) =>
+          String(value || '')
+            .normalize('NFKD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '')
+
+        const formatEnglishName = ({ first, last }, format) => {
+          const cleanFirst = String(first || '').trim()
+          const cleanLast = String(last || '').trim()
+          if (!cleanFirst || !cleanLast) return ''
+
+          if (format === 'dotLower') {
+            const firstSegment = normalizeNameSegment(cleanFirst)
+            const lastSegment = normalizeNameSegment(cleanLast)
+            return firstSegment && lastSegment ? `${firstSegment}.${lastSegment}` : ''
+          }
+
+          return `${cleanFirst} ${cleanLast}`
+        }
+
+        const englishFullName = computed(() =>
+          englishNameParts.value ? formatEnglishName(englishNameParts.value, 'full') : ''
+        )
+
+        const englishDotName = computed(() =>
+          englishNameParts.value ? formatEnglishName(englishNameParts.value, 'dotLower') : ''
+        )
 
         const generateCustom = () => {
           let chars = ''
@@ -602,9 +637,14 @@
           username.value = result
         }
 
-        const englishNameDisplay = computed(() => {
+        const englishFullNameDisplay = computed(() => {
           if (englishNameLoading.value) return '生成中…'
-          return englishName.value || '点击生成'
+          return englishFullName.value || '点击生成'
+        })
+
+        const englishDotNameDisplay = computed(() => {
+          if (englishNameLoading.value) return '生成中…'
+          return englishDotName.value || '点击生成'
         })
 
         const englishNameProviderText = computed(() => {
@@ -677,7 +717,7 @@
                         : getEnglishNameFromLocal(gender)
 
                 if (reqId !== englishNameReq) return
-                englishName.value = `${data.first} ${data.last}`
+                englishNameParts.value = { first: data.first, last: data.last }
                 englishNameProvider.value = data.provider
                 if (source === 'namefake' && data.provider !== 'namefake') {
                   toast('NameFake 获取失败，已回退本地')
@@ -776,7 +816,8 @@
 
         return {
           tab, customPassword, pinPassword, randomPort, username,
-          englishName, englishGender, englishSource, englishNameLoading, englishNameDisplay, englishNameProviderText,
+          englishFullName, englishDotName, englishGender, englishSource,
+          englishNameLoading, englishFullNameDisplay, englishDotNameDisplay, englishNameProviderText,
           macAddress, macFormat, macCase, formattedMac, length, usernameLength, options, showToast, toastMessage,
           customStrength, customStrengthColor, customStrengthText, customStrengthStyle,
           generateCustom, generatePin, generatePort, generateUsername, generateEnglishName, generateMac, copy
