@@ -5,485 +5,1198 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>随机生成器</title>
-  <meta name="theme-color" content="#667eea">
+  <meta name="theme-color" content="#18201f">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      color-scheme: light;
+      --page: #ebece5;
+      --surface: #ffffff;
+      --surface-soft: #f4f5ef;
+      --surface-strong: #e9ebe3;
+      --ink: #18201f;
+      --muted: #6d7671;
+      --line: #dfe2d9;
+      --accent: #ff6b3d;
+      --accent-hover: #ed5830;
+      --accent-soft: #fff0e9;
+      --sidebar: #18201f;
+      --sidebar-muted: #a4aea8;
+      --success: #2f9c69;
+      --shadow: 0 28px 70px rgba(32, 42, 38, 0.14);
     }
 
-    html, body {
-      overflow: hidden;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--page);
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #fff;
       min-height: 100vh;
       min-height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      padding: 32px;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255, 107, 61, 0.12), transparent 28%),
+        radial-gradient(circle at 90% 86%, rgba(57, 126, 104, 0.12), transparent 30%),
+        var(--page);
     }
 
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 28px;
-      width: 360px;
-      max-width: 100%;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    label,
+    select,
+    input[type="range"] {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(255, 107, 61, 0.32);
+      outline-offset: 3px;
+    }
+
+    [v-cloak] {
+      display: none;
+    }
+
+    #app {
+      min-height: calc(100vh - 64px);
+      min-height: calc(100dvh - 64px);
+      display: grid;
+      place-items: center;
+    }
+
+    .app-shell {
+      width: min(1040px, 100%);
+      min-height: 640px;
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid rgba(24, 32, 31, 0.08);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 30px 22px 24px;
+      color: #fff;
+      background: var(--sidebar);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px 30px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: var(--sidebar);
+      background: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      transform: rotate(-4deg);
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 0.98rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 2px;
+      color: var(--sidebar-muted);
+      font-size: 0.72rem;
+    }
+
+    .nav-label {
+      padding: 0 10px 10px;
+      color: #707b76;
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
     }
 
     .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      background: #f5f5f5;
-      padding: 4px;
-      border-radius: 10px;
+      display: grid;
+      gap: 6px;
     }
 
     .tab {
-      flex: 1;
-      padding: 12px 8px;
-      border: none;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      align-items: center;
+      gap: 11px;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      color: var(--sidebar-muted);
       background: transparent;
-      border-radius: 8px;
+      text-align: left;
       cursor: pointer;
-      font-size: 1.3rem;
-      color: #666;
-      transition: all 0.2s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateX(2px);
     }
 
     .tab.active {
-      background: white;
-      color: #333;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.06);
     }
 
-    .password-display {
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
+    .tab-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #d6dcd8;
+      background: rgba(255, 255, 255, 0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .tab.active .tab-icon {
+      color: var(--sidebar);
+      background: var(--accent);
+    }
+
+    .tab-copy strong,
+    .tab-copy small {
+      display: block;
+    }
+
+    .tab-copy strong {
+      font-size: 0.86rem;
+      font-weight: 650;
+    }
+
+    .tab-copy small {
+      margin-top: 2px;
+      color: #74807a;
+      font-size: 0.66rem;
+    }
+
+    .tab.active .tab-copy small {
+      color: #aeb8b2;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px 10px 2px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--sidebar-muted);
+      font-size: 0.7rem;
+      line-height: 1.55;
+    }
+
+    .privacy-status {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      margin-bottom: 4px;
+      color: #e9eeeb;
+      font-weight: 650;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #50d28b;
+      box-shadow: 0 0 0 4px rgba(80, 210, 139, 0.12);
+    }
+
+    .workspace {
+      min-width: 0;
+      padding: 46px 52px 42px;
+      background: var(--surface);
+    }
+
+    .workspace-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 850;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .workspace-header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.55rem);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+
+    .workspace-header p {
+      max-width: 520px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .header-badge {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 0.7rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tool-content {
+      display: grid;
+      gap: 18px;
+    }
+
+    .result-card {
+      position: relative;
+      overflow: hidden;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface-soft);
+    }
+
+    .result-card::after {
+      content: "";
+      position: absolute;
+      right: -30px;
+      bottom: -42px;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 24px solid rgba(255, 107, 61, 0.06);
+      pointer-events: none;
+    }
+
+    .result-label {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-bottom: 11px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .result-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     .password-text {
+      min-width: 0;
       flex: 1;
-      font-family: 'Courier New', monospace;
-      font-size: 1rem;
-      word-break: break-all;
-      color: #333;
-      min-height: 24px;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: clamp(1.08rem, 3vw, 1.48rem);
+      font-weight: 650;
+      letter-spacing: 0.025em;
+      overflow-wrap: anywhere;
     }
 
     .copy-btn {
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
+      flex: none;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: var(--surface);
+      font-size: 0.76rem;
+      font-weight: 750;
       cursor: pointer;
-      transition: background 0.2s;
-      font-size: 0.85rem;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
     }
 
     .copy-btn:hover {
-      background: #5a6fd6;
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
 
     .copy-btn:disabled {
-      opacity: 0.55;
+      opacity: 0.45;
       cursor: not-allowed;
+      transform: none;
+    }
+
+    .strength-wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
     }
 
     .strength-bar {
-      height: 5px;
-      background: #e0e0e0;
-      border-radius: 3px;
-      margin-bottom: 6px;
+      height: 6px;
       overflow: hidden;
+      border-radius: 99px;
+      background: var(--surface-strong);
     }
 
     .strength-fill {
       height: 100%;
-      transition: width 0.3s, background 0.3s;
+      border-radius: inherit;
+      transition: width 300ms ease, background 300ms ease;
     }
 
     .strength-text {
-      text-align: center;
-      font-size: 0.8rem;
-      margin-bottom: 16px;
+      min-width: 28px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .controls-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
     }
 
     .option-group {
-      margin-bottom: 16px;
+      margin-bottom: 22px;
     }
 
     .option-label {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
-      color: #555;
-      font-size: 0.9rem;
+      gap: 16px;
+      margin-bottom: 13px;
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .value-chip {
+      min-width: 40px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-align: center;
     }
 
     .length-slider {
       width: 100%;
-      height: 6px;
+      height: 5px;
       appearance: none;
       -webkit-appearance: none;
-      background: #e0e0e0;
-      border-radius: 3px;
+      border-radius: 99px;
       outline: none;
+      background: var(--surface-strong);
     }
 
     .length-slider::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      appearance: none;
       -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      background: #667eea;
+      border: 5px solid var(--surface);
       border-radius: 50%;
-      cursor: pointer;
+      background: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 3px 8px rgba(255, 107, 61, 0.28);
+      cursor: grab;
+    }
+
+    .length-slider::-moz-range-thumb {
+      width: 11px;
+      height: 11px;
+      border: 5px solid var(--surface);
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+      cursor: grab;
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 9px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.62rem;
+    }
+
+    .section-label {
+      display: block;
+      margin-bottom: 11px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
     }
 
     .checkbox-group {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-bottom: 20px;
     }
 
     .checkbox-item {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 11px;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface-soft);
       cursor: pointer;
-      font-size: 0.85rem;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .checkbox-item.selected {
+      border-color: rgba(255, 107, 61, 0.55);
+      background: var(--accent-soft);
+    }
+
+    .checkbox-item:has(input:focus-visible) {
+      outline: 3px solid rgba(255, 107, 61, 0.24);
+      outline-offset: 2px;
     }
 
     .checkbox-item input {
-      width: 16px;
-      height: 16px;
-      accent-color: #667eea;
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    .check-indicator {
+      width: 19px;
+      height: 19px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border: 1px solid #b8c0bb;
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    .checkbox-item.selected .check-indicator {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .checkbox-item.selected .check-indicator::after {
+      content: "";
+      width: 8px;
+      height: 4px;
+      border-bottom: 2px solid #fff;
+      border-left: 2px solid #fff;
+      transform: translateY(-1px) rotate(-45deg);
+    }
+
+    .checkbox-copy {
+      min-width: 0;
+    }
+
+    .checkbox-copy strong,
+    .checkbox-copy small {
+      display: block;
+    }
+
+    .checkbox-copy strong {
+      color: var(--ink);
+      font-size: 0.78rem;
+    }
+
+    .checkbox-copy small {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.66rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     .generate-btn {
       width: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 13px;
+      color: #fff;
+      background: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 750;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 8px 20px rgba(24, 32, 31, 0.14);
+      transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+
+    .generate-btn span {
+      color: var(--accent);
+      font-size: 1rem;
     }
 
     .generate-btn:hover {
+      background: #283331;
+      box-shadow: 0 12px 24px rgba(24, 32, 31, 0.2);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
 
     .generate-btn:disabled {
-      opacity: 0.65;
+      opacity: 0.55;
       cursor: not-allowed;
-      transform: none;
       box-shadow: none;
+      transform: none;
     }
 
     .pin-display {
-      font-size: 2rem;
-      letter-spacing: 8px;
-      text-align: center;
+      font-size: clamp(1.7rem, 5vw, 2.45rem);
+      letter-spacing: 0.18em;
     }
 
     .info-text {
-      text-align: center;
-      color: #888;
-      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 14px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 0.74rem;
+      line-height: 1.5;
+    }
+
+    .info-text::before {
+      content: "i";
+      width: 18px;
+      height: 18px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--surface);
+      background: var(--muted);
+      font-family: Georgia, serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .select-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
       margin-bottom: 20px;
     }
 
+    .select-field {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 750;
+    }
+
     .select-input {
-      padding: 6px 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      background: white;
-      color: #333;
+      width: 100%;
+      padding: 11px 36px 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: var(--surface-soft);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .results-stack {
+      display: grid;
+      gap: 10px;
     }
 
     .toast {
       position: fixed;
-      inset: 0;
-      width: fit-content;
-      height: fit-content;
-      margin: auto;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 14px 28px;
-      border-radius: 8px;
-      opacity: 0;
-      transition: opacity 0.3s;
+      left: 50%;
+      bottom: 28px;
       z-index: 9999;
+      padding: 12px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(24, 32, 31, 0.94);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+      font-size: 0.78rem;
+      opacity: 0;
       pointer-events: none;
+      transform: translate(-50%, 16px);
+      transition: opacity 200ms ease, transform 200ms ease;
     }
 
     .toast.show {
       opacity: 1;
+      transform: translate(-50%, 0);
     }
 
-    @media (prefers-color-scheme: dark) {
+    @media (max-width: 800px) {
       body {
-        background: #1a1a1a;
+        padding: 18px;
       }
 
-      .card {
-        background: #2d2d2d;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      #app {
+        min-height: calc(100vh - 36px);
+        min-height: calc(100dvh - 36px);
+      }
+
+      .app-shell {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .sidebar {
+        padding: 20px;
+      }
+
+      .brand {
+        padding: 0 2px 18px;
+      }
+
+      .nav-label,
+      .sidebar-footer {
+        display: none;
       }
 
       .tabs {
-        background: #3a3a3a;
+        grid-template-columns: repeat(6, minmax(64px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+
+      .tabs::-webkit-scrollbar {
+        display: none;
       }
 
       .tab {
-        color: #aaa;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 9px 6px;
+        text-align: center;
       }
 
-      .tab.active {
-        background: #4a4a4a;
-        color: #fff;
+      .tab:hover {
+        transform: none;
       }
 
-      .password-display {
-        background: #3a3a3a;
+      .tab-icon {
+        width: 32px;
+        height: 32px;
+        margin: auto;
       }
 
-      .password-text {
-        color: #eee;
+      .tab-copy small {
+        display: none;
       }
 
-      .option-label {
-        color: #bbb;
+      .tab-copy strong {
+        font-size: 0.68rem;
       }
 
-      .checkbox-item {
-        color: #ccc;
+      .workspace {
+        padding: 34px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 0;
+        background: var(--surface);
       }
 
-      .length-slider {
-        background: #4a4a4a;
+      #app {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: block;
       }
 
-      .strength-bar {
-        background: #4a4a4a;
+      .app-shell {
+        min-height: 100vh;
+        min-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
       }
 
-      .info-text {
-        color: #888;
+      .sidebar {
+        padding: 18px 16px 14px;
       }
 
-      .select-input {
-        background: #3a3a3a;
-        border-color: #4a4a4a;
-        color: #eee;
+      .tabs {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 2px;
+      }
+
+      .tab {
+        padding-inline: 2px;
+      }
+
+      .tab-copy strong {
+        font-size: 0.62rem;
+      }
+
+      .brand-mark {
+        width: 36px;
+        height: 36px;
+      }
+
+      .brand {
+        padding-bottom: 14px;
+      }
+
+      .workspace {
+        padding: 28px 20px 30px;
+      }
+
+      .workspace-header {
+        margin-bottom: 24px;
+      }
+
+      .workspace-header p {
+        font-size: 0.8rem;
+      }
+
+      .header-badge {
+        display: none;
+      }
+
+      .result-card,
+      .controls-card {
+        padding: 18px;
+        border-radius: 16px;
+      }
+
+      .result-row {
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        padding: 8px 10px;
+      }
+
+      .checkbox-group,
+      .select-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --page: #101514;
+        --surface: #1b2321;
+        --surface-soft: #222c29;
+        --surface-strong: #303b38;
+        --ink: #f2f4ef;
+        --muted: #9ca7a1;
+        --line: #34403d;
+        --accent-soft: #3a2923;
+        --sidebar: #111715;
+        --shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
+      }
+
+      .copy-btn {
+        background: #293330;
+      }
+
+      .generate-btn {
+        color: #18201f;
+        background: var(--accent);
+        box-shadow: 0 8px 20px rgba(255, 107, 61, 0.16);
+      }
+
+      .generate-btn span {
+        color: #18201f;
+      }
+
+      .generate-btn:hover {
+        background: var(--accent-hover);
+      }
+
+      .info-text::before {
+        color: #18201f;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
       }
     }
   </style>
 </head>
 
 <body>
-  <div id="app">
-    <div class="card">
-      <div class="tabs">
-        <button class="tab" :class="{ active: tab === 'password' }" @click="tab = 'password'">🔐</button>
-        <button class="tab" :class="{ active: tab === 'username' }" @click="tab = 'username'">👤</button>
-        <button class="tab" :class="{ active: tab === 'englishName' }" @click="tab = 'englishName'">🇬🇧</button>
-        <button class="tab" :class="{ active: tab === 'pin' }" @click="tab = 'pin'">🔢</button>
-        <button class="tab" :class="{ active: tab === 'port' }" @click="tab = 'port'">🌐</button>
-        <button class="tab" :class="{ active: tab === 'mac' }" @click="tab = 'mac'">📡</button>
-      </div>
-
-      <!-- 自定义密码 -->
-      <template v-if="tab === 'password'">
-        <div class="password-display">
-          <span class="password-text">{{ customPassword || '点击生成' }}</span>
-          <button class="copy-btn" @click="copy(customPassword)" :disabled="!customPassword">复制</button>
-        </div>
-
-        <div class="strength-bar">
-          <div class="strength-fill" :style="customStrengthStyle"></div>
-        </div>
-        <p class="strength-text" :style="{ color: customStrengthColor }">{{ customStrengthText }}</p>
-
-        <div class="option-group">
-          <div class="option-label">
-            <span>密码长度</span>
-            <span>{{ length }}</span>
-          </div>
-          <input type="range" class="length-slider" v-model="length" min="6" max="32">
-        </div>
-
-        <div class="checkbox-group">
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="options.uppercase">
-            <span>大写字母 (A-Z)</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="options.lowercase">
-            <span>小写字母 (a-z)</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="options.numbers">
-            <span>数字 (0-9)</span>
-          </label>
-          <label class="checkbox-item">
-            <input type="checkbox" v-model="options.symbols">
-            <span>特殊符号 (!@#$)</span>
-          </label>
-        </div>
-
-        <button class="generate-btn" @click="generateCustom">生成密码</button>
-      </template>
-
-      <!-- 6位数字密码 -->
-      <template v-if="tab === 'pin'">
-        <div class="password-display">
-          <span class="password-text pin-display">{{ pinPassword || '------' }}</span>
-          <button class="copy-btn" @click="copy(pinPassword)" :disabled="!pinPassword">复制</button>
-        </div>
-
-        <p class="info-text">适用于手机解锁、银行卡密码、验证码等</p>
-
-        <button class="generate-btn" @click="generatePin">生成密码</button>
-      </template>
-
-      <!-- 随机端口 -->
-      <template v-if="tab === 'port'">
-        <div class="password-display">
-          <span class="password-text pin-display">{{ randomPort || '-----' }}</span>
-          <button class="copy-btn" @click="copy(randomPort)" :disabled="!randomPort">复制</button>
-        </div>
-
-        <p class="info-text">范围 1024-65534，避开系统保留端口</p>
-
-        <button class="generate-btn" @click="generatePort">生成端口</button>
-      </template>
-
-      <!-- 随机用户名 -->
-      <template v-if="tab === 'username'">
-        <div class="password-display">
-          <span class="password-text">{{ username || '点击生成' }}</span>
-          <button class="copy-btn" @click="copy(username)" :disabled="!username">复制</button>
-        </div>
-
-        <div class="option-group">
-          <div class="option-label">
-            <span>用户名长度</span>
-            <span>{{ usernameLength }}</span>
-          </div>
-          <input type="range" class="length-slider" v-model="usernameLength" min="4" max="16">
-        </div>
-
-        <button class="generate-btn" @click="generateUsername">生成用户名</button>
-      </template>
-
-      <!-- 英文名 -->
-      <template v-if="tab === 'englishName'">
-        <div class="password-display">
-          <span class="password-text">{{ englishFullNameDisplay }}</span>
-          <button class="copy-btn" @click="copy(englishFullName)" :disabled="!englishFullName || englishNameLoading">复制</button>
-        </div>
-
-        <div class="password-display">
-          <span class="password-text">{{ englishDotNameDisplay }}</span>
-          <button class="copy-btn" @click="copy(englishDotName)" :disabled="!englishDotName || englishNameLoading">复制</button>
-        </div>
-
-        <div class="option-group">
-          <div class="option-label">
-            <span>性别</span>
-            <select v-model="englishGender" class="select-input">
-              <option value="male">男</option>
-              <option value="female">女</option>
-            </select>
+  <div id="app" v-cloak>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">RG</div>
+          <div class="brand-copy">
+            <strong>Random Lab</strong>
+            <span>轻量随机工具箱</span>
           </div>
         </div>
 
-        <div class="option-group">
-          <div class="option-label">
-            <span>来源</span>
-            <select v-model="englishSource" class="select-input">
-              <option value="auto">自动</option>
-              <option value="randomuser">RandomUser</option>
-              <option value="namefake">NameFake</option>
-              <option value="fakerapi">FakerAPI</option>
-              <option value="local">本地</option>
-            </select>
+        <span class="nav-label">Generators</span>
+        <nav class="tabs" aria-label="生成器类型">
+          <button type="button" class="tab" :class="{ active: tab === 'password' }"
+            :aria-current="tab === 'password' ? 'page' : undefined" @click="tab = 'password'">
+            <span class="tab-icon" aria-hidden="true">Aa</span>
+            <span class="tab-copy"><strong>密码</strong><small>Password</small></span>
+          </button>
+          <button type="button" class="tab" :class="{ active: tab === 'username' }"
+            :aria-current="tab === 'username' ? 'page' : undefined" @click="tab = 'username'">
+            <span class="tab-icon" aria-hidden="true">ID</span>
+            <span class="tab-copy"><strong>用户名</strong><small>Username</small></span>
+          </button>
+          <button type="button" class="tab" :class="{ active: tab === 'englishName' }"
+            :aria-current="tab === 'englishName' ? 'page' : undefined" @click="tab = 'englishName'">
+            <span class="tab-icon" aria-hidden="true">EN</span>
+            <span class="tab-copy"><strong>英文名</strong><small>English name</small></span>
+          </button>
+          <button type="button" class="tab" :class="{ active: tab === 'pin' }"
+            :aria-current="tab === 'pin' ? 'page' : undefined" @click="tab = 'pin'">
+            <span class="tab-icon" aria-hidden="true">06</span>
+            <span class="tab-copy"><strong>数字密码</strong><small>PIN code</small></span>
+          </button>
+          <button type="button" class="tab" :class="{ active: tab === 'port' }"
+            :aria-current="tab === 'port' ? 'page' : undefined" @click="tab = 'port'">
+            <span class="tab-icon" aria-hidden="true">:#</span>
+            <span class="tab-copy"><strong>端口</strong><small>Network port</small></span>
+          </button>
+          <button type="button" class="tab" :class="{ active: tab === 'mac' }"
+            :aria-current="tab === 'mac' ? 'page' : undefined" @click="tab = 'mac'">
+            <span class="tab-icon" aria-hidden="true">MAC</span>
+            <span class="tab-copy"><strong>MAC 地址</strong><small>Hardware ID</small></span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="privacy-status"><span class="status-dot"></span>本地优先</div>
+          <p>生成内容不会被保存。</p>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="workspace-header">
+          <div>
+            <span class="eyebrow">{{ activeTool.eyebrow }}</span>
+            <h1>{{ activeTool.title }}</h1>
+            <p>{{ activeTool.description }}</p>
           </div>
+          <div class="header-badge"><span class="status-dot"></span>READY</div>
+        </header>
+
+        <div class="tool-content">
+          <!-- 自定义密码 -->
+          <template v-if="tab === 'password'">
+            <section class="result-card" aria-label="密码结果">
+              <span class="result-label">生成结果</span>
+              <div class="result-row">
+                <span class="password-text" aria-live="polite">{{ customPassword || '点击生成' }}</span>
+                <button type="button" class="copy-btn" @click="copy(customPassword)"
+                  :disabled="!customPassword">复制</button>
+              </div>
+              <div class="strength-wrap">
+                <div class="strength-bar" aria-hidden="true">
+                  <div class="strength-fill" :style="customStrengthStyle"></div>
+                </div>
+                <p class="strength-text" :style="{ color: customStrengthColor }">{{ customStrengthText }}</p>
+              </div>
+            </section>
+
+            <section class="controls-card" aria-label="密码设置">
+              <div class="option-group">
+                <div class="option-label">
+                  <label for="password-length">密码长度</label>
+                  <output class="value-chip">{{ length }}</output>
+                </div>
+                <input id="password-length" type="range" class="length-slider" v-model="length" min="6" max="32">
+                <div class="range-labels" aria-hidden="true"><span>6</span><span>32</span></div>
+              </div>
+
+              <span class="section-label">字符类型 · 每种至少包含一个</span>
+              <div class="checkbox-group">
+                <label class="checkbox-item" :class="{ selected: options.uppercase }">
+                  <input type="checkbox" v-model="options.uppercase">
+                  <span class="check-indicator" aria-hidden="true"></span>
+                  <span class="checkbox-copy"><strong>大写字母</strong><small>A — Z</small></span>
+                </label>
+                <label class="checkbox-item" :class="{ selected: options.lowercase }">
+                  <input type="checkbox" v-model="options.lowercase">
+                  <span class="check-indicator" aria-hidden="true"></span>
+                  <span class="checkbox-copy"><strong>小写字母</strong><small>a — z</small></span>
+                </label>
+                <label class="checkbox-item" :class="{ selected: options.numbers }">
+                  <input type="checkbox" v-model="options.numbers">
+                  <span class="check-indicator" aria-hidden="true"></span>
+                  <span class="checkbox-copy"><strong>数字</strong><small>0 — 9</small></span>
+                </label>
+                <label class="checkbox-item" :class="{ selected: options.symbols }">
+                  <input type="checkbox" v-model="options.symbols">
+                  <span class="check-indicator" aria-hidden="true"></span>
+                  <span class="checkbox-copy"><strong>特殊符号</strong><small>! @ # $</small></span>
+                </label>
+              </div>
+
+              <button type="button" class="generate-btn" @click="generateCustom">
+                <span aria-hidden="true">↻</span>生成新密码
+              </button>
+            </section>
+          </template>
+
+          <!-- 随机用户名 -->
+          <template v-if="tab === 'username'">
+            <section class="result-card" aria-label="用户名结果">
+              <span class="result-label">随机用户名</span>
+              <div class="result-row">
+                <span class="password-text" aria-live="polite">{{ username || '点击生成' }}</span>
+                <button type="button" class="copy-btn" @click="copy(username)" :disabled="!username">复制</button>
+              </div>
+            </section>
+
+            <section class="controls-card" aria-label="用户名设置">
+              <div class="option-group">
+                <div class="option-label">
+                  <label for="username-length">用户名长度</label>
+                  <output class="value-chip">{{ usernameLength }}</output>
+                </div>
+                <input id="username-length" type="range" class="length-slider" v-model="usernameLength" min="4" max="16">
+                <div class="range-labels" aria-hidden="true"><span>4</span><span>16</span></div>
+              </div>
+              <button type="button" class="generate-btn" @click="generateUsername">
+                <span aria-hidden="true">↻</span>生成用户名
+              </button>
+            </section>
+          </template>
+
+          <!-- 英文名 -->
+          <template v-if="tab === 'englishName'">
+            <div class="results-stack">
+              <section class="result-card" aria-label="英文全名结果">
+                <span class="result-label">标准全名</span>
+                <div class="result-row">
+                  <span class="password-text" aria-live="polite">{{ englishFullNameDisplay }}</span>
+                  <button type="button" class="copy-btn" @click="copy(englishFullName)"
+                    :disabled="!englishFullName || englishNameLoading">复制</button>
+                </div>
+              </section>
+              <section class="result-card" aria-label="英文账号名结果">
+                <span class="result-label">账号格式</span>
+                <div class="result-row">
+                  <span class="password-text" aria-live="polite">{{ englishDotNameDisplay }}</span>
+                  <button type="button" class="copy-btn" @click="copy(englishDotName)"
+                    :disabled="!englishDotName || englishNameLoading">复制</button>
+                </div>
+              </section>
+            </div>
+
+            <p class="info-text">当前来源：{{ englishNameProviderText }}</p>
+
+            <section class="controls-card" aria-label="英文名设置">
+              <div class="select-grid">
+                <label class="select-field">性别
+                  <select v-model="englishGender" class="select-input">
+                    <option value="male">男</option>
+                    <option value="female">女</option>
+                  </select>
+                </label>
+                <label class="select-field">来源
+                  <select v-model="englishSource" class="select-input">
+                    <option value="auto">自动</option>
+                    <option value="randomuser">RandomUser</option>
+                    <option value="namefake">NameFake</option>
+                    <option value="fakerapi">FakerAPI</option>
+                    <option value="local">本地</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" class="generate-btn" @click="generateEnglishName" :disabled="englishNameLoading">
+                <span aria-hidden="true">↻</span>{{ englishNameLoading ? '生成中…' : '生成英文名' }}
+              </button>
+            </section>
+          </template>
+
+          <!-- 6 位数字密码 -->
+          <template v-if="tab === 'pin'">
+            <section class="result-card" aria-label="数字密码结果">
+              <span class="result-label">六位 PIN</span>
+              <div class="result-row">
+                <span class="password-text pin-display" aria-live="polite">{{ pinPassword || '------' }}</span>
+                <button type="button" class="copy-btn" @click="copy(pinPassword)" :disabled="!pinPassword">复制</button>
+              </div>
+            </section>
+            <p class="info-text">适用于临时验证码、设备解锁码等低敏感场景</p>
+            <section class="controls-card">
+              <button type="button" class="generate-btn" @click="generatePin">
+                <span aria-hidden="true">↻</span>生成数字密码
+              </button>
+            </section>
+          </template>
+
+          <!-- 随机端口 -->
+          <template v-if="tab === 'port'">
+            <section class="result-card" aria-label="端口结果">
+              <span class="result-label">可用端口候选</span>
+              <div class="result-row">
+                <span class="password-text pin-display" aria-live="polite">{{ randomPort || '-----' }}</span>
+                <button type="button" class="copy-btn" @click="copy(randomPort)" :disabled="!randomPort">复制</button>
+              </div>
+            </section>
+            <p class="info-text">从 1024—65534 中随机选择，实际使用前请确认端口未被占用</p>
+            <section class="controls-card">
+              <button type="button" class="generate-btn" @click="generatePort">
+                <span aria-hidden="true">↻</span>生成随机端口
+              </button>
+            </section>
+          </template>
+
+          <!-- MAC 地址 -->
+          <template v-if="tab === 'mac'">
+            <section class="result-card" aria-label="MAC 地址结果">
+              <span class="result-label">随机 MAC 地址</span>
+              <div class="result-row">
+                <span class="password-text" aria-live="polite">{{ formattedMac || '点击生成' }}</span>
+                <button type="button" class="copy-btn" @click="copy(formattedMac)" :disabled="!macAddress">复制</button>
+              </div>
+            </section>
+
+            <section class="controls-card" aria-label="MAC 地址设置">
+              <div class="select-grid">
+                <label class="select-field">格式
+                  <select v-model="macFormat" class="select-input">
+                    <option value=":">00:10:FA:6E:38:4A</option>
+                    <option value="-">00-10-FA-6E-38-4A</option>
+                    <option value=".">0010.FA6E.384A</option>
+                    <option value="">0010FA6E384A</option>
+                  </select>
+                </label>
+                <label class="select-field">字母大小写
+                  <select v-model="macCase" class="select-input">
+                    <option value="upper">大写</option>
+                    <option value="lower">小写</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" class="generate-btn" @click="generateMac">
+                <span aria-hidden="true">↻</span>生成 MAC 地址
+              </button>
+            </section>
+          </template>
         </div>
+      </section>
+    </main>
 
-        <p class="info-text">当前来源：{{ englishNameProviderText }}</p>
-
-        <button class="generate-btn" @click="generateEnglishName" :disabled="englishNameLoading">
-          {{ englishNameLoading ? '生成中…' : '生成英文名' }}
-        </button>
-      </template>
-
-      <!-- MAC 地址 -->
-      <template v-if="tab === 'mac'">
-        <div class="password-display">
-          <span class="password-text">{{ formattedMac || '点击生成' }}</span>
-          <button class="copy-btn" @click="copy(formattedMac)" :disabled="!macAddress">复制</button>
-        </div>
-
-        <div class="option-group">
-          <div class="option-label">
-            <span>格式</span>
-            <select v-model="macFormat" class="select-input">
-              <option value=":">00:10:FA:6E:38:4A</option>
-              <option value="-">00-10-FA-6E-38-4A</option>
-              <option value=".">0010.FA6E.384A</option>
-              <option value="">0010FA6E384A</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="option-group">
-          <div class="option-label">
-            <span>大小写</span>
-            <select v-model="macCase" class="select-input">
-              <option value="upper">大写</option>
-              <option value="lower">小写</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="generate-btn" @click="generateMac">生成 MAC 地址</button>
-      </template>
-    </div>
-
-    <div class="toast" :class="{ show: showToast }">{{ toastMessage }}</div>
+    <div class="toast" :class="{ show: showToast }" role="status" aria-live="polite">{{ toastMessage }}</div>
   </div>
 
   <script>
     const { createApp, ref, computed, reactive, watch } = Vue
+
+    const TOOL_META = {
+      password: {
+        eyebrow: 'PASSWORD STUDIO',
+        title: '自定义密码',
+        description: '组合长度与字符类型，快速生成符合规则的随机密码。'
+      },
+      username: {
+        eyebrow: 'IDENTITY MAKER',
+        title: '随机用户名',
+        description: '生成简洁的小写字母用户名，长度由你控制。'
+      },
+      englishName: {
+        eyebrow: 'NAME EXPLORER',
+        title: '英文名生成器',
+        description: '获得标准英文全名，以及适合账号使用的点分格式。'
+      },
+      pin: {
+        eyebrow: 'PIN GENERATOR',
+        title: '六位数字密码',
+        description: '即时生成一组随机的六位数字组合。'
+      },
+      port: {
+        eyebrow: 'NETWORK TOOL',
+        title: '随机端口',
+        description: '从非系统保留端口范围中抽取一个候选值。'
+      },
+      mac: {
+        eyebrow: 'HARDWARE ID',
+        title: 'MAC 地址生成器',
+        description: '按指定分隔格式和大小写生成随机 MAC 地址。'
+      }
+    }
 
     const ENGLISH_NAME_DATA = {
       first: {
@@ -545,6 +1258,7 @@
         const usernameLength = ref(8)
         const showToast = ref(false)
         const toastMessage = ref('')
+        const activeTool = computed(() => TOOL_META[tab.value])
 
         const options = reactive({
           uppercase: true,
@@ -829,7 +1543,7 @@
         generateMac()
 
         return {
-          tab, customPassword, pinPassword, randomPort, username,
+          tab, activeTool, customPassword, pinPassword, randomPort, username,
           englishFullName, englishDotName, englishGender, englishSource,
           englishNameLoading, englishFullNameDisplay, englishDotNameDisplay, englishNameProviderText,
           macAddress, macFormat, macCase, formattedMac, length, usernameLength, options, showToast, toastMessage,
