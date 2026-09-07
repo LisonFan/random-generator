@@ -557,7 +557,7 @@
           uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
           lowercase: 'abcdefghijklmnopqrstuvwxyz',
           numbers: '0123456789',
-          symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+          symbols: '!@#$'
         }
 
         const normalizeNameSegment = (value) =>
@@ -593,9 +593,11 @@
         const generateCustom = () => {
           let chars = ''
           let charsNoSymbols = ''
+          const requiredChars = []
           for (const [key, enabled] of Object.entries(options)) {
             if (enabled) {
               chars += charSets[key]
+              requiredChars.push(pickOne(charSets[key]))
               if (key !== 'symbols') charsNoSymbols += charSets[key]
             }
           }
@@ -605,15 +607,27 @@
             return
           }
 
-          let result = ''
-          // 第一位不能是符号
-          const firstCharSet = charsNoSymbols || chars
-          result += firstCharSet.charAt(Math.floor(Math.random() * firstCharSet.length))
-          
-          for (let i = 1; i < length.value; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length))
+          const result = requiredChars
+          while (result.length < length.value) {
+            result.push(pickOne(chars))
           }
-          customPassword.value = result
+
+          for (let i = result.length - 1; i > 0; i--) {
+            const randomIndex = Math.floor(Math.random() * (i + 1))
+            const currentChar = result[i]
+            result[i] = result[randomIndex]
+            result[randomIndex] = currentChar
+          }
+
+          // 有非符号类别时，第一位不能是符号
+          if (charsNoSymbols && charSets.symbols.includes(result[0])) {
+            const firstNonSymbolIndex = result.findIndex((char) => charsNoSymbols.includes(char))
+            const firstChar = result[0]
+            result[0] = result[firstNonSymbolIndex]
+            result[firstNonSymbolIndex] = firstChar
+          }
+
+          customPassword.value = result.join('')
         }
 
         const generatePin = () => {
